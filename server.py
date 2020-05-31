@@ -51,7 +51,7 @@ def set_unit_value(api_key, email, network_password, user_password, unit_id):
     casambi.ws_close_message(web_sock=web_sock, wire_id=wire_id)
 
 
-def casambi_worker(write_queue, command_queue, logger_queue, api_key, email, network_password, user_password):
+def casambi_worker(write_queue, command_queue, logger_queue, api_key, email, network_password, user_password, verbose=False):
     setproctitle('casambi_worker')
 
     worker_configurer(logger_queue)
@@ -96,7 +96,7 @@ def casambi_worker(write_queue, command_queue, logger_queue, api_key, email, net
             try:
                 casambi_msg = web_sock.recv()
             except websocket._exceptions.WebSocketConnectionClosedException:
-                innerlogger.debug("casambi_worker: Socket closed, reopening")
+                innerlogger.info("casambi_worker: Socket closed, reopening")
 
                 break
             except socket.timeout:
@@ -104,7 +104,7 @@ def casambi_worker(write_queue, command_queue, logger_queue, api_key, email, net
             except websocket._exceptions.WebSocketTimeoutException:
                 pass
             except TimeoutError:
-                innerlogger.debug("casambi_worker: Socket closed, reopening")
+                innerlogger.info("casambi_worker: Socket closed, reopening")
 
                 break
 
@@ -181,7 +181,7 @@ def casambi_worker(write_queue, command_queue, logger_queue, api_key, email, net
             innerlogger.debug("casambi_worker: units: {}".format(units))
 
 
-def mqtt_worker(casambi_reader_queue, mqtt_request_queue, logger_queue, mqtt_server, mqtt_server_port, mqtt_user, mqtt_password):
+def mqtt_worker(casambi_reader_queue, mqtt_request_queue, logger_queue, mqtt_server, mqtt_server_port, mqtt_user, mqtt_password, verbose=False):
     '''
     - platform: mqtt
     name: "Spot köksö"
@@ -353,7 +353,7 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe('casambi', qos=0)
 
     for topic in topics:
-        _LOGGER.debug("on_connect: subscribing on topic=\"{}\"".format(topic))
+        innerlogger.debug("on_connect: subscribing on topic=\"{}\"".format(topic))
         client.subscribe(topic, qos=0)
 
 
@@ -365,7 +365,7 @@ def worker_configurer(queue):
     root.setLevel(logging.DEBUG)
 
 
-def listener_configurer():
+def listener_configurer(verbose=False):
     root = logging.getLogger()
     #file_handler = logging.handlers.RotatingFileHandler('mptest.log', 'a', 300, 10)
     console_handler = logging.StreamHandler()
@@ -374,14 +374,17 @@ def listener_configurer():
     console_handler.setFormatter(formatter)
     #root.addHandler(file_handler)
     root.addHandler(console_handler)
-    root.setLevel(logging.DEBUG)
 
+    if verbose:
+        root.setLevel(logging.DEBUG)
+    else:
+        root.setLevel(logging.INFO)
 
 
 def logger_worker(queue, verbose):
     setproctitle('casambi_logger')
 
-    listener_configurer()
+    listener_configurer(verbose=verbose)
     while True:
         while not queue.empty():
             record = queue.get()
@@ -391,7 +394,7 @@ def logger_worker(queue, verbose):
 
 
 def main():
-    verbose = True
+    verbose = False
     config = parse_config()
 
     api_key = config['api_key']
@@ -403,15 +406,18 @@ def main():
     mqtt_server_port = config['mqtt_server_port']
     mqtt_user = config['mqtt_user']
 
+    if 'verbose' in config:
+        verbose = config['verbose']
+
     casambi_reader_queue = multiprocessing.Queue()
     mqtt_request_queue = multiprocessing.Queue()
     logger_queue = multiprocessing.Queue()
 
-    casambi_process = multiprocessing.Process(target=casambi_worker, args=(casambi_reader_queue, mqtt_request_queue, logger_queue, api_key, email, network_password, user_password), name='Casambi')
+    casambi_process = multiprocessing.Process(target=casambi_worker, args=(casambi_reader_queue, mqtt_request_queue, logger_queue, api_key, email, network_password, user_password, verbose), name='Casambi')
     #casambi_process.daemon=True
     casambi_process.start()
 
-    mqtt_process = multiprocessing.Process(target=mqtt_worker, args=(casambi_reader_queue, mqtt_request_queue, logger_queue, mqtt_server, mqtt_server_port, mqtt_user, mqtt_password), name='MQTT')
+    mqtt_process = multiprocessing.Process(target=mqtt_worker, args=(casambi_reader_queue, mqtt_request_queue, logger_queue, mqtt_server, mqtt_server_port, mqtt_user, mqtt_password, verbose), name='MQTT')
     #mqtt_process.daemon=True
     mqtt_process.start()
 
