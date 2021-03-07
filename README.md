@@ -60,3 +60,6 @@ Get the unit_ids either from casambi api or from the MQTT broker (topic casambi/
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+## Disclaimer
+This project is neither affiliated with nor endorsed by Casambi.
