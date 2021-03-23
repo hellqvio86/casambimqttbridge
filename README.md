@@ -1,5 +1,5 @@
 # Casambi to MQTT bridge
-![GitHub issues](https://img.shields.io/github/issues-raw/hellqvio86/casambimqttbridge) ![GitHub last commit](https://img.shields.io/github/last-commit/hellqvio86/casambimqttbridge) ![GitHub](https://img.shields.io/github/license/hellqvio86/casambimqttbridge)
+![GitHub last commit](https://img.shields.io/github/last-commit/hellqvio86/casambimqttbridge) ![GitHub issues](https://img.shields.io/github/issues-raw/hellqvio86/casambimqttbridge) 
 
 Python script for controlling lights, this script utilises casambi python library (https://github.com/olofhellqvist/casambi).
 
