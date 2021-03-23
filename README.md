@@ -65,4 +65,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Disclaimer
 This project is neither affiliated with nor endorsed by Casambi.
 
-This project is no longer activily developed, I have moved on to this  https://github.com/hellqvio86/home_assistant_casambi project.
+This project is no longer activily developed, I have moved on to this project: https://github.com/hellqvio86/home_assistant_casambi
